@@ -1,7 +1,7 @@
 import { register, login } from '../operations/userOperations';
 import HyperExpress from 'hyper-express';
 
-export const userRoutes = (webserver: HyperExpress.Server) => {
+const userRoutes = (webserver: HyperExpress.Server) => {
     webserver.post('/register', async (request, response) => {
         try {
             const { email, username, password } = await request.json();
@@ -28,3 +28,5 @@ export const userRoutes = (webserver: HyperExpress.Server) => {
         }
     });
 }
+
+export default userRoutes

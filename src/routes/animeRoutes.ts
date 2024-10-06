@@ -1,7 +1,7 @@
-import { top } from "../operations/animeOperations";
 import HyperExpress from 'hyper-express'
+import { top } from "../operations/animeOperations";
 
-export const animeRoutes = (webserver: HyperExpress.Server) => {
+const animeRoutes = (webserver: HyperExpress.Server) => {
     webserver.get('/top', async (request, response) => {
         try {
             const topResult = await top()
@@ -12,6 +12,6 @@ export const animeRoutes = (webserver: HyperExpress.Server) => {
             return response.status(500).json({ message: 'Unable to get Top' })
         }
     });
-
-    webserver.post('/')
 }
+
+export default animeRoutes
