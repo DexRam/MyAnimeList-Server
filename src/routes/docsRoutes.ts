@@ -18,7 +18,7 @@ export const docsRoutes = (webserver: HyperExpress.Server) => {
    */
   webserver.get("/docs-json", (request, response) => {
     try {
-      response.send(swaggerSpec);
+      response.json(swaggerSpec);
     } catch (error) {
       response.status(500).send(`Internal Server Error ${error}`);
     }
@@ -38,7 +38,7 @@ export const docsRoutes = (webserver: HyperExpress.Server) => {
   webserver.get("/docs", (request, response) => {
     try {
       response.type("text/html");
-      response.send(getSwaggerHtml());
+      response.json(getSwaggerHtml());
     } catch (error) {
       response.status(500).send(`Internal Server Error ${error}`);
     }

@@ -3,17 +3,17 @@ import db from "./settings";
 
 async function initializeDatabase() {
   try {
-    const hasAnimeStatus = await db.schema.hasTable("anime_status");
+    const hasAnimeStatus = await db.schema.hasTable("anime_statuses");
     if (!hasAnimeStatus) {
       await db.schema.createTable(
-        "anime_status",
+        "anime_statuses",
         (table: Knex.CreateTableBuilder) => {
           table.increments("id").primary().notNullable();
           table.string("status").notNullable();
           table.timestamps(true, true);
         }
       );
-      console.log("Table 'anime_status' created.");
+      console.log("Table 'anime_statuses' created.");
     }
 
     const hasUsers = await db.schema.hasTable("users");
@@ -38,7 +38,7 @@ async function initializeDatabase() {
             .integer("status_id")
             .unsigned()
             .references("id")
-            .inTable("anime_status");
+            .inTable("anime_statuses");
           table.integer("user_id").unsigned().references("id").inTable("users");
           table.timestamps(true, true);
         }
@@ -46,13 +46,22 @@ async function initializeDatabase() {
       console.log("Table 'user_animes' created.");
     }
 
-    const statuses = ["Planned", "Watching", "Watched"];
-    await db("anime_status")
-      .insert(statuses.map((status) => ({ status })))
-      .onConflict("status")
-      .ignore();
-
-    console.log("Statuses inserted or already exist.");
+    const hasAnimeStatuses = await db.schema.hasTable("anime_statuses");
+    if (!hasAnimeStatuses) {
+      await db.schema.createTable(
+        "anime_statuses",
+        (table: Knex.CreateTableBuilder) => {
+          table.increments("status").primary().notNullable();
+          table.timestamps(true, true);
+        }
+      );
+      console.log("Table 'anime_statuses' created.");
+      const statuses = ["Planned", "Watching", "Watched"];
+      await db("anime_statuses")
+        .insert(statuses.map((status) => ({ status })))
+        .onConflict("status")
+        .ignore();
+    }
   } catch (error) {
     console.error("Error initializing the database:", error);
   }
