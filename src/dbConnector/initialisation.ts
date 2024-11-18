@@ -9,7 +9,7 @@ async function initializeDatabase() {
         "anime_statuses",
         (table: Knex.CreateTableBuilder) => {
           table.increments("id").primary().notNullable();
-          table.string("status").notNullable();
+          table.string("status").notNullable().unique();
           table.timestamps(true, true);
         }
       );
