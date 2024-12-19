@@ -4,6 +4,7 @@ import {
   corsHeaders,
   defaultContentType,
   rateLimiter,
+  authenticateToken
 } from "./middleware";
 import initializeDatabase from "./dbConnector/initialisation";
 import docsRoutes from "./routes/docsRoutes";
@@ -27,6 +28,7 @@ webserver.use(securityHeaders);
 webserver.use(corsHeaders);
 webserver.use(defaultContentType);
 webserver.use(rateLimiter);
+// webserver.use(authenticateToken)
 
 const routes = [docsRoutes, userRoutes, animeRoutes];
 routes.forEach((route) => route(webserver));
