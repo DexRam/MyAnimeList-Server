@@ -1,11 +1,42 @@
+import jwt from "jsonwebtoken";
 import { Request, Response } from "hyper-express";
+import { LRUCache } from "lru-cache";
+import { getSecretKey } from "./server";
 
-// Define the type for the global request times
-declare global {
-  var requestTimes: {
-    [key: string]: number[];
-  };
+declare module "hyper-express" {
+  export interface Request {
+    userId?: string | jwt.JwtPayload;
+  }
 }
+
+const rateLimitCache = new LRUCache<string, number[]>({
+  max: 5000,
+  ttl: 15 * 60 * 1000,
+});
+
+export const rateLimiter = (
+  request: Request,
+  response: Response,
+  next: () => void
+) => {
+  const clientIp = request.ip;
+  const currentTime = Date.now();
+  const requestTimes = rateLimitCache.get(clientIp) || [];
+  const recentRequests = requestTimes.filter(
+    (time) => currentTime - time < 15 * 60 * 1000
+  );
+
+  if (recentRequests.length >= 100) {
+    return response.status(429).json({
+      message:
+        "Too many requests from this IP, please try again after 15 minutes",
+    });
+  }
+
+  recentRequests.push(currentTime);
+  rateLimitCache.set(clientIp, recentRequests);
+  next();
+};
 
 export const securityHeaders = (
   request: Request,
@@ -46,29 +77,36 @@ export const defaultContentType = (
   next();
 };
 
-export const rateLimiter = (
+export const authenticateToken = (
   request: Request,
   response: Response,
   next: () => void
 ) => {
-  const clientIp = request.ip;
-  const currentTime = Date.now();
-  if (!global.requestTimes) {
-    global.requestTimes = {};
+  const SECRET_KEY = getSecretKey();
+  const authHeader = request.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) {
+    return response
+      .status(401)
+      .json({ message: "Access token is missing or invalid" });
   }
-  if (!global.requestTimes[clientIp]) {
-    global.requestTimes[clientIp] = [];
-  }
-  const requestTimesForIp = global.requestTimes[clientIp].filter(
-    time => currentTime - time < 15 * 60 * 1000
-  );
-  if (requestTimesForIp.length >= 100) {
-    return response.status(429).json({
-      message: "Too many requests from this IP, please try again after 15 minutes"
-    });
-  }
-  requestTimesForIp.push(currentTime);
-  global.requestTimes[clientIp] = requestTimesForIp;
 
-  next();
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+    if (err) {
+      if (err.name === "TokenExpiredError") {
+        return response.status(401).json({ message: "Token expired" });
+      }
+      if (err.name === "JsonWebTokenError") {
+        return response.status(403).json({ message: "Invalid token" });
+      }
+      return response.status(403).json({ message: "Token validation error" });
+    }
+    if (user) {
+      request.userId = user;
+      next();
+    } else {
+      return response.status(403).json({ message: "Token validation error" });
+    }
+    next();
+  });
 };

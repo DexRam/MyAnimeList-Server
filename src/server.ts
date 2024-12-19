@@ -9,6 +9,16 @@ import initializeDatabase from "./dbConnector/initialisation";
 import docsRoutes from "./routes/docsRoutes";
 import userRoutes from "./routes/userRoutes";
 import animeRoutes from "./routes/animeRoutes";
+import dotenv from "dotenv";
+dotenv.config();
+
+export const getSecretKey = () => {
+  const SECRET_KEY = process.env.SECRET_KEY || "default-secret-key";
+  if (!SECRET_KEY) {
+    throw new Error("SECRET_KEY is not defined in the environment variables");
+  }
+  return SECRET_KEY;
+};
 
 const PORT = Number(process.env.PORT) || 1024;
 export const webserver = new HyperExpress.Server();
@@ -35,7 +45,9 @@ const startServer = async () => {
   try {
     await initializeDatabase();
     await webserver.listen(PORT);
-    console.log(`Webserver started on port ${PORT}`);
+    console.log(
+      `Webserver started on port ${PORT}, check it on: http://localhost:${PORT}`
+    );
   } catch (error) {
     console.error("Failed to start server:", error);
   }

@@ -32,8 +32,14 @@ const userRoutes = (webserver: HyperExpress.Server) => {
    *         description: User was successfully created
    */
   webserver.post("/register", async (request, response) => {
+    console.log(await request.json());
     try {
       const { email, username, password } = await request.json();
+      if (!email || !username || !password) {
+        return response
+          .status(400)
+          .json({ message: "All fields are required." });
+      }
       const registrationResult = await register({ email, username, password });
       return response.json({ data: registrationResult });
     } catch (error) {
@@ -70,7 +76,15 @@ const userRoutes = (webserver: HyperExpress.Server) => {
     try {
       const { email, password } = await request.json();
       const loginResult = await login({ email, password });
-      return response.json({ data: loginResult });
+      if (loginResult.token) {
+        response.setCookie("token", loginResult.token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 24 * 60 * 60 * 1000,
+          sameSite: "strict",
+        });
+      }
+      return response.json({ data: loginResult.message });
     } catch (error) {
       return response.status(500).send(`Login failed ${error}`);
     }

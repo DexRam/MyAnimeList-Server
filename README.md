@@ -1,6 +1,6 @@
 # My Anime List Server
 
-This is a server built with Hyper Express for managing anime and manga lists. It provides an API for users to track, rate, and review anime.
+This is a server built with Hyper Express for managing anime list. It provides an API for users to track, rate, and review anime.
 
 ## Features
 
@@ -29,6 +29,8 @@ This is a server built with Hyper Express for managing anime and manga lists. It
    b. Configure settings if needed
    c. Go to src - middleware
    d. Configure security settings if needed
+   e. Go to the root folder
+   f. Set up your secred key in .env
 
 4. Run the development server:
 
